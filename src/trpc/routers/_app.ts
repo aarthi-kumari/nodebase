@@ -1,32 +1,13 @@
 
-import { z } from 'zod';
-import { createTRPCRouter, premiumProcedure, protectedProcedure } from '../init';
-import prisma from '@/lib/db';
-import { inngest } from '@/inngest/client';
-
-import { generateText } from 'ai';
+import { credentialsRouter } from "@/features/credentials/server/routers";
+import { executionsRouter } from "@/features/executions/server/routers";
+import { workflowsRouter } from "@/features/workflows/server/routers";
+import { createTRPCRouter } from "../init";
 
 export const appRouter = createTRPCRouter({
-  testAi: premiumProcedure.mutation(async () => {
-await inngest.send({
-  name: "execute/ai",
-  });
-
-return { success: true, message: "Job queued" };
-  }),
-  getWorkflows: protectedProcedure.query(({ ctx }) => {
-    return prisma.workflow.findMany();
-  }),
-  createWorkflow: protectedProcedure.input(z.void()).mutation(async () => {
-    await inngest.send({
-      name: 'test/hello.world',
-      data: {
-        timestamp: new Date().toISOString(),
-      },
-    });
-
-    return { success: true, message: "Job queued" };
-  })
+  workflows: workflowsRouter,
+  executions: executionsRouter,
+  credentials: credentialsRouter,
 });
 
 // export type definition of API
