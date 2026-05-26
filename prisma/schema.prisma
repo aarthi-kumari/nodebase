@@ -22,6 +22,9 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  workflows    workflow[]
+  executions   execution[]
+  credentials  credential[]
 
   @@unique([email])
   @@map("user")
@@ -78,4 +81,64 @@ model Verification {
 model workflow{
   id String @id @default(cuid())
   name String
+  nodes Json @default("[]")
+  edges Json @default("[]")
+  webhookSecret String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executions execution[]
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+model execution {
+  id String @id @default(cuid())
+  status ExecutionStatus @default(PENDING)
+  error String?
+  logs Json @default("[]")
+  input Json?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+
+  workflowId String
+  workflow workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([userId])
+  @@map("execution")
+}
+
+enum CredentialType {
+  OPENAI
+  ANTHROPIC
+  GEMINI
+  DISCORD
+  SLACK
+}
+
+model credential {
+  id String @id @default(cuid())
+  name String
+  type CredentialType
+  value String
+  lastFour String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("credential")
 }
